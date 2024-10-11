@@ -21,8 +21,47 @@ from rest_framework.authtoken.views import ObtainAuthToken
 import openpyxl
 from .models import Prof, ProfCollegianBodies, ProfMember, Awards, Vacation, Report, Vizit, SocialPartnershipAgreements
 from .serializer import ProfCollegianBodiesSerializer, ProfMemberSerializer, ProfSerializer, AwardsSerializer, VacationSerializer, VizitSerializer, ReportSerializer, SocialPartnershipAgreementsSerializer, UserSerializer
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+from django.utils.http import urlsafe_base64_encode
+from django.utils.encoding import force_bytes
+from django.contrib.auth.tokens import default_token_generator
+from django.utils.http import urlsafe_base64_decode
+from django.utils.encoding import force_str
 
+@csrf_exempt
+def generate_reset_token(request):
+    if request.method == 'POST':
+        username = request.POST.get('username')
+        try:
+            user = User.objects.get(username=username)
+            token = default_token_generator.make_token(user)
+            uid = urlsafe_base64_encode(force_bytes(user.pk))
+            return JsonResponse({'token': token, 'uid': uid})
+        except User.DoesNotExist:
+            return JsonResponse({'error': 'User does not exist'}, status=400)
+    return JsonResponse({'error': 'Invalid request method'}, status=400)
 
+@csrf_exempt
+def reset_password(request):
+    if request.method == 'POST':
+        uidb64 = request.POST.get('uid')
+        token = request.POST.get('token')
+        new_password = request.POST.get('new_password')
+        
+        try:
+            uid = force_str(urlsafe_base64_decode(uidb64))
+            user = User.objects.get(pk=uid)
+            
+            if default_token_generator.check_token(user, token):
+                user.set_password(new_password)
+                user.save()
+                return JsonResponse({'success': 'Password has been reset successfully'})
+            else:
+                return JsonResponse({'error': 'Invalid token'}, status=400)
+        except (User.DoesNotExist, ValueError):
+            return JsonResponse({'error': 'Invalid user or token'}, status=400)
+    return JsonResponse({'error': 'Invalid request method'}, status=400)
 
 class CustomAuthToken(ObtainAuthToken):
     def post(self, request, *args, **kwargs):
