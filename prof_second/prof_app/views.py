@@ -1,4 +1,6 @@
 import os
+import string
+import random
 from django.shortcuts import render
 from django.conf import settings
 from django.core.files.storage import default_storage
@@ -28,6 +30,10 @@ from django.utils.encoding import force_bytes
 from django.contrib.auth.tokens import default_token_generator
 from django.utils.http import urlsafe_base64_decode
 from django.utils.encoding import force_str
+
+def generate_random_password(length=8):
+    characters = string.ascii_letters + string.digits + string.punctuation
+    return ''.join(random.choice(characters) for i in range(length))
 
 @csrf_exempt
 def generate_reset_token(request):
@@ -107,7 +113,7 @@ class RegisterUserView(APIView):
             return Response({"error": "User with this username already exists"}, status=status.HTTP_400_BAD_REQUEST)
 
         # Генерация случайного пароля
-        password = User.objects.make_random_password()
+        password = generate_random_password()
 
         # Создание пользователя
         user = User.objects.create_user(username=username, password=password)
