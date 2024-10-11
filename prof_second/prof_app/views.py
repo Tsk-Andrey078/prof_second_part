@@ -93,7 +93,7 @@ class IsAdminOrReadOnly(BasePermission):
         if request.method in SAFE_METHODS:
             return True
         
-        return request.user.groups.filter(name='Admin').exists()
+        return request.user and request.user.is_authenticated and request.user.is_staff
     
 class IsAdminUser(BasePermission):
     
