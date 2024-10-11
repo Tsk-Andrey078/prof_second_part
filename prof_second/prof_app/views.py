@@ -82,7 +82,7 @@ class ProfView(viewsets.ModelViewSet):
         return prof_data
 
     def get_children(self, prof):
-        children = Prof.objects.filter(higher_union_org=prof.bin)
+        children = Prof.objects.filter(higher_union_org=prof.union_name)
         serialized_children = [self.serialize_prof(child) for child in children]  
         return serialized_children
 
