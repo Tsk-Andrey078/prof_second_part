@@ -20,7 +20,7 @@ from django.contrib.auth.models import User
 from rest_framework.authtoken.views import ObtainAuthToken
 import openpyxl
 from .models import Prof, ProfCollegianBodies, ProfMember, Awards, Vacation, Report, Vizit, SocialPartnershipAgreements
-from .serializer import ProfCollegianBodiesSerializer, ProfMemberSerializer, ProfSerializer, AwardsSerializer, VacationSerializer, VizitSerializer, ReportSerializer, SocialPartnershipAgreementsSerializer
+from .serializer import ProfCollegianBodiesSerializer, ProfMemberSerializer, ProfSerializer, AwardsSerializer, VacationSerializer, VizitSerializer, ReportSerializer, SocialPartnershipAgreementsSerializer, UserSerializer
 
 class CustomAuthToken(ObtainAuthToken):
     def post(self, request, *args, **kwargs):
@@ -52,6 +52,11 @@ class IsAdminUser(BasePermission):
     
     def has_permission(self, request, view):
         return request.user and request.user.is_authenticated and request.user.is_staff
+
+class UserCreateView(generics.CreateAPIView):
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
+    permission_classes = [IsAdminUser] 
 
 class ProfView(viewsets.ModelViewSet):
     queryset = Prof.objects.all()
