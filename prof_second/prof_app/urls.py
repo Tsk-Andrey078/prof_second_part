@@ -18,6 +18,7 @@ urlpatterns = [
     path('token/', obtain_auth_token, name='obtain_token'),
     path('auth/login/', CustomAuthToken.as_view(), name='user-login'),
     path('register/', UserCreateView.as_view(), name='user-register'),
+    path('prof/<str:bin>/', ProfView.as_view({'get': 'retrieve'}), name='prof-detail'),
     path('awards-vacation-prof-member-id-view', AwardsVacationProfIdVIew.as_view(), name='awards-vacation-prof-member-id-view'),
     path('', include(router.urls))
 ]

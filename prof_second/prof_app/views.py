@@ -66,6 +66,26 @@ class ProfView(viewsets.ModelViewSet):
     permission_classes = [IsAdminOrReadOnly]
     filterset_fields = ["industry", "higher_union_org", "union_name", "union_type", "bin", "chairman_name"]
 
+    def retrieve(self, request, bin=None):
+        try:
+            prof = Prof.objects.get(bin=bin)
+            result = self.serialize_prof(prof)
+
+            return Response(result)
+
+        except Prof.DoesNotExist:
+            return Response({"detail": "Not found."}, status=status.HTTP_404_NOT_FOUND)
+
+    def serialize_prof(self, prof):
+        prof_data = ProfSerializer(prof).data
+        prof_data['children'] = self.get_children(prof)
+        return prof_data
+
+    def get_children(self, prof):
+        children = Prof.objects.filter(higher_union_org=prof.bin)
+        serialized_children = [self.serialize_prof(child) for child in children]  
+        return serialized_children
+
 class ProfMemberView(viewsets.ModelViewSet):
     queryset = ProfMember.objects.all()
     serializer_class = ProfMemberSerializer
@@ -202,4 +222,5 @@ class UploadProfMembers(APIView):
             return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
         
 class GetTreeView(APIView):
-    pass
+    def get(self, request, *args, **kwargs):
+        pass
