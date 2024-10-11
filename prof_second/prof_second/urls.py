@@ -16,8 +16,13 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
+from rest_framework import permissions
+from rest_auth.registration.views import RegisterView
+from prof_app.views import IsAdminUser
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/', include('prof_app.urls')),
+    path('api/auth/', include('rest_auth.urls')),  
+    path('api/auth/registration/', RegisterView.as_view(permission_classes=[IsAdminUser])),
 ]

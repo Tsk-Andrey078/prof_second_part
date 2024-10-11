@@ -12,19 +12,53 @@ from rest_framework.views import APIView
 from rest_framework import viewsets
 from rest_framework.decorators import action
 from rest_framework import generics
+from rest_framework.permissions import BasePermission, SAFE_METHODS
 from django.contrib.auth import authenticate
 from django.shortcuts import get_object_or_404
 from rest_framework.authtoken.models import Token
 from django.contrib.auth.models import User
+from rest_framework.authtoken.views import ObtainAuthToken
 import openpyxl
 from .models import Prof, ProfCollegianBodies, ProfMember, Awards, Vacation, Report, Vizit, SocialPartnershipAgreements
 from .serializer import ProfCollegianBodiesSerializer, ProfMemberSerializer, ProfSerializer, AwardsSerializer, VacationSerializer, VizitSerializer, ReportSerializer, SocialPartnershipAgreementsSerializer
+
+class CustomAuthToken(ObtainAuthToken):
+    def post(self, request, *args, **kwargs):
+        serializer = self.serializer_class(data=request.data, context={'request': request})
+        serializer.is_valid(raise_exception=True)
+        user = serializer.validated_data['user']
+        token, created = Token.objects.get_or_create(user=user)
+
+        return Response({
+            'token': token.key,
+            'user_id': user.pk,
+            'username': user.username,
+            'is_admin': user.is_staff,  
+            'is_superuser': user.is_superuser  
+        })
+
+class IsAdminOrReadOnly(BasePermission):
+
+    def has_permission(self, request, view):
+        if not request.user or not request.user.is_authenticated:
+            return False
+        
+        if request.method in SAFE_METHODS:
+            return True
+        
+        return request.user.groups.filter(name='Admin').exists()
+    
+class IsAdminUser(BasePermission):
+    
+    def has_permission(self, request, view):
+        return request.user and request.user.is_authenticated and request.user.is_staff
 
 class ProfView(viewsets.ModelViewSet):
     queryset = Prof.objects.all()
     serializer_class = ProfSerializer
     lookup_field = "bin"
     filter_backends = [DjangoFilterBackend]
+    permission_classes = [IsAdminOrReadOnly]
     filterset_fields = ["industry", "higher_union_org", "union_name", "union_type", "bin", "chairman_name"]
 
 class ProfMemberView(viewsets.ModelViewSet):
@@ -32,40 +66,48 @@ class ProfMemberView(viewsets.ModelViewSet):
     serializer_class = ProfMemberSerializer
     lookup_field = "id"
     filter_backends = [DjangoFilterBackend]
+    permission_classes = [IsAdminOrReadOnly]
     filterset_fields = ["name", "union_ticket_number", "gender", "birth_date", "position", "role", "education", "awards", "vacation", "prof_id"]
 
 class ProfCollegianBodiesView(viewsets.ModelViewSet):
     queryset = ProfCollegianBodies.objects.all()
     serializer_class = ProfCollegianBodiesSerializer
     lookup_field = "id"
+    permission_classes = [IsAdminOrReadOnly]
 
 class AwardsView(viewsets.ModelViewSet):
     queryset = Awards.objects.all()
     serializer_class = AwardsSerializer
     lookup_field = "id"
+    permission_classes = [IsAdminOrReadOnly]
 
 class VacationView(viewsets.ModelViewSet):
     queryset = Vacation.objects.all()
     serializer_class = VacationSerializer
     lookup_field = "id"
+    permission_classes = [IsAdminOrReadOnly]
 
 class ReportView(viewsets.ModelViewSet):
     queryset = Report.objects.all()
     serializer_class = ReportSerializer
     lookup_field = "id"
+    permission_classes = [IsAdminOrReadOnly]
 
 class VizitView(viewsets.ModelViewSet):
     queryset = Vizit.objects.all()
     serializer_class = VizitSerializer
     lookup_field = "id"
+    permission_classes = [IsAdminOrReadOnly]
 
 class SocialPartnershipView(viewsets.ModelViewSet):
     queryset = SocialPartnershipAgreements.objects.all()
     serializer_class = SocialPartnershipAgreementsSerializer
     lookup_field = "id"
+    permission_classes = [IsAdminOrReadOnly]
 
 class AwardsVacationProfIdVIew(APIView):
-    
+    permission_classes = [IsAdminOrReadOnly]
+
     def get(self, request, *args, **kwargs):
         prof_member_id = request.query_params.get('prof_member_id')
         request_type = request.query_params.get('type')
@@ -86,6 +128,8 @@ class AwardsVacationProfIdVIew(APIView):
         return Response(serializer.data)
 
 class UploadProfMembers(APIView):
+    permission_classes = [IsAdminOrReadOnly]
+
     def post(self, request, *args, **kwargs):
         # Получаем prof_id из query параметра
         prof_id = request.query_params.get('prof_id')
