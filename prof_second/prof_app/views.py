@@ -22,6 +22,8 @@ import openpyxl
 from .models import Prof, ProfCollegianBodies, ProfMember, Awards, Vacation, Report, Vizit, SocialPartnershipAgreements
 from .serializer import ProfCollegianBodiesSerializer, ProfMemberSerializer, ProfSerializer, AwardsSerializer, VacationSerializer, VizitSerializer, ReportSerializer, SocialPartnershipAgreementsSerializer, UserSerializer
 
+
+
 class CustomAuthToken(ObtainAuthToken):
     def post(self, request, *args, **kwargs):
         serializer = self.serializer_class(data=request.data, context={'request': request})
@@ -52,6 +54,27 @@ class IsAdminUser(BasePermission):
     
     def has_permission(self, request, view):
         return request.user and request.user.is_authenticated and request.user.is_staff
+
+class RegisterUserView(APIView):
+    permission_classes = [IsAdminUser]
+
+    def post(self, request):
+        username = request.data.get('username')
+        if not username:
+            return Response({"error": "Username is required"}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Проверяем, существует ли пользователь с таким именем
+        if User.objects.filter(username=username).exists():
+            return Response({"error": "User with this username already exists"}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Генерация случайного пароля
+        password = User.objects.make_random_password()
+
+        # Создание пользователя
+        user = User.objects.create_user(username=username, password=password)
+
+        # Возвращаем созданный пользователя и пароль
+        return Response({"username": username, "password": password}, status=status.HTTP_201_CREATED)
 
 class UserCreateView(generics.CreateAPIView):
     queryset = User.objects.all()
