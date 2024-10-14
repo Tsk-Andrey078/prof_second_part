@@ -41,7 +41,7 @@ class Prof(models.Model):
     chairman_name = models.CharField(max_length = 255)
 
     def __str__(self):
-        return self.bin
+        return str(self.bin)
 
 class Report(models.Model):
     id = models.AutoField(primary_key = True)
@@ -83,7 +83,7 @@ class ProfMember(models.Model):
     email = models.CharField(max_length = 255)
 
     def __str__(self):
-        return self.id
+        return str(self.id)
 
 class Awards(models.Model):
     id = models.AutoField(primary_key = True)
