@@ -111,7 +111,7 @@ class RegisterUserView(APIView):
         # Проверяем, существует ли пользователь с таким именем
         if User.objects.filter(username=username).exists():
             return Response({"error": "User with this username already exists"}, status=status.HTTP_400_BAD_REQUEST)
-        if not Prof.objects.get(bin=username).exists():
+        if not Prof.objects.filter(bin=username).exists():
             return Response({"error": "Prof does not exists"}, status=status.HTTP_400_BAD_REQUEST)
         # Генерация случайного пароля
         password = generate_random_password()
