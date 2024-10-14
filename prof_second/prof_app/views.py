@@ -53,7 +53,7 @@ def reset_password(request):
     if request.method == 'POST':
         uidb64 = request.POST.get('uid')
         token = request.POST.get('token')
-        new_password = request.POST.get('new_password')
+        new_password = generate_random_password()
         
         try:
             uid = force_str(urlsafe_base64_decode(uidb64))
@@ -111,7 +111,8 @@ class RegisterUserView(APIView):
         # Проверяем, существует ли пользователь с таким именем
         if User.objects.filter(username=username).exists():
             return Response({"error": "User with this username already exists"}, status=status.HTTP_400_BAD_REQUEST)
-
+        if not Prof.objects.get(bin=username).exists():
+            return Response({"error": "Prof does not exists"}, status=status.HTTP_400_BAD_REQUEST)
         # Генерация случайного пароля
         password = generate_random_password()
 
@@ -197,6 +198,34 @@ class SocialPartnershipView(viewsets.ModelViewSet):
     serializer_class = SocialPartnershipAgreementsSerializer
     lookup_field = "id"
     permission_classes = [IsAdminOrReadOnly]
+
+class GetReportByBin(APIView):
+    permission_classes = [IsAdminOrReadOnly]
+    serializer_class = ReportSerializer
+
+    def get(self, request, *args, **kwargs):
+        prof_id = request.query_params.get('prof_id', None)
+        if not prof_id:
+            return Response({'error': 'prof_id parameter is required'})
+        try:
+            data = Report.objects.filter(prof_id = prof_id)
+        except data.DoesNotExist:
+            return Response({'error': 'Object does not exist'})
+        return Response(self.serializer_class(data, many = True).data)
+
+class GetCollegianByBin(APIView):
+    permission_classes = [IsAdminOrReadOnly]
+    serializer_class = ProfCollegianBodiesSerializer
+
+    def get(self, reqeust, *args, **kwargs):
+        prof_id = reqeust.query_params.get('prof_id', None)
+        if not prof_id:
+            return Response({'error': 'prof_id parameter is required'})
+        try:
+            data = ProfCollegianBodies.objects.filter(prof_id = prof_id)
+        except data.DoesNotExist:
+            return Response({'error': 'Object does not exist'})    
+        return Response(self.serializer_class(data, many = True).data)
 
 class AwardsVacationProfIdVIew(APIView):
     permission_classes = [IsAdminOrReadOnly]
@@ -288,7 +317,3 @@ class UploadProfMembers(APIView):
 
         except Exception as e:
             return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
-        
-class GetTreeView(APIView):
-    def get(self, request, *args, **kwargs):
-        pass
