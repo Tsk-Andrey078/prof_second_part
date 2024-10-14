@@ -1,4 +1,26 @@
 from django.db import models
+import datetime
+import os
+
+def get_upload_path_document(instance, filename):
+    # Получаем текущую дату
+    now = datetime.datetime.now()
+    # Генерируем уникальное название файла
+    unique_name = now.strftime("%Y%m%d%H%M%S%f")  # Время до миллисекунд
+    # Расширение исходного файла
+    extension = filename.split('.')[-1]
+    # Генерация пути: год/месяц/день
+    return os.path.join(f'documents/{now.year}/{now.month}/{now.day}/', f'{unique_name}.{extension}')
+
+def get_upload_path_image(instance, filename):
+    # Получаем текущую дату
+    now = datetime.datetime.now()
+    # Генерируем уникальное название файла
+    unique_name = now.strftime("%Y%m%d%H%M%S%f")  # Время до миллисекунд
+    # Расширение исходного файла
+    extension = filename.split('.')[-1]
+    # Генерация пути: год/месяц/день
+    return os.path.join(f'image/{now.year}/{now.month}/{now.day}/', f'{unique_name}.{extension}')
 
 # Create your models here.
 class Vizit(models.Model):
@@ -26,7 +48,7 @@ class Report(models.Model):
     prof_id = models.ForeignKey(Prof, on_delete = models.CASCADE)
     report_type = models.CharField(max_length = 255)
     creator = models.CharField(max_length = 255)
-    document = models.TextField()
+    document = models.FileField(upload_to=get_upload_path_document)
     status = models.CharField(max_length = 50)
     creation_date = models.DateField(auto_now_add = True)
     submission_date = models.DateField()
@@ -44,7 +66,7 @@ class ProfCollegianBodies(models.Model):
 class ProfMember(models.Model):
     id = models.AutoField(primary_key = True)
     prof_id = models.ForeignKey(Prof, on_delete = models.CASCADE)
-    photo = models.TextField()
+    photo = models.ImageField(upload_to=get_upload_path_image)
     name = models.CharField(max_length = 255)
     union_ticket_number = models.CharField(max_length = 255)
     gender = models.CharField(max_length = 10)
