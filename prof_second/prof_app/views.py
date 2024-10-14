@@ -62,7 +62,7 @@ def reset_password(request):
             if default_token_generator.check_token(user, token):
                 user.set_password(new_password)
                 user.save()
-                return JsonResponse({'success': 'Password has been reset successfully'})
+                return JsonResponse({'success': f'Password has been reset successfully. Password: {new_password}'})
             else:
                 return JsonResponse({'error': 'Invalid token'}, status=400)
         except (User.DoesNotExist, ValueError):
