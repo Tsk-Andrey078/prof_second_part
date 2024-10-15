@@ -31,44 +31,6 @@ from django.contrib.auth.tokens import default_token_generator
 from django.utils.http import urlsafe_base64_decode
 from django.utils.encoding import force_str
 
-def generate_random_password(length=8):
-    characters = string.ascii_letters + string.digits + string.punctuation
-    return ''.join(random.choice(characters) for i in range(length))
-
-@csrf_exempt
-def generate_reset_token(request):
-    if request.method == 'POST':
-        username = request.POST.get('username')
-        try:
-            user = User.objects.get(username=username)
-            token = default_token_generator.make_token(user)
-            uid = urlsafe_base64_encode(force_bytes(user.pk))
-            return JsonResponse({'token': token, 'uid': uid})
-        except User.DoesNotExist:
-            return JsonResponse({'error': 'User does not exist'}, status=400)
-    return JsonResponse({'error': 'Invalid request method'}, status=400)
-
-@csrf_exempt
-def reset_password(request):
-    if request.method == 'POST':
-        uidb64 = request.POST.get('uid')
-        token = request.POST.get('token')
-        new_password = generate_random_password()
-        
-        try:
-            uid = force_str(urlsafe_base64_decode(uidb64))
-            user = User.objects.get(pk=uid)
-            
-            if default_token_generator.check_token(user, token):
-                user.set_password(new_password)
-                user.save()
-                return JsonResponse({'success': f'Password has been reset successfully. Password: {new_password}'})
-            else:
-                return JsonResponse({'error': 'Invalid token'}, status=400)
-        except (User.DoesNotExist, ValueError):
-            return JsonResponse({'error': 'Invalid user or token'}, status=400)
-    return JsonResponse({'error': 'Invalid request method'}, status=400)
-
 class CustomAuthToken(ObtainAuthToken):
     def post(self, request, *args, **kwargs):
         serializer = self.serializer_class(data=request.data, context={'request': request})
@@ -99,6 +61,83 @@ class IsAdminUser(BasePermission):
     
     def has_permission(self, request, view):
         return request.user and request.user.is_authenticated and request.user.is_staff
+
+def generate_random_password(length=8):
+    characters = string.ascii_letters + string.digits + string.punctuation
+    return ''.join(random.choice(characters) for i in range(length))
+
+""" @csrf_exempt
+def generate_reset_token(request):
+    if request.method == 'POST':
+        username = request.POST.get('username')
+        try:
+            user = User.objects.get(username=username)
+            token = default_token_generator.make_token(user)
+            uid = urlsafe_base64_encode(force_bytes(user.pk))
+            return JsonResponse({'token': token, 'uid': uid})
+        except User.DoesNotExist:
+            return JsonResponse({'error': 'User does not exist'}, status=400)
+    return JsonResponse({'error': 'Invalid request method'}, status=400) """
+
+class GenerateResetToken(APIView):
+    permission_classes = [IsAdminUser]
+    def post(self, request, *args, **kwargs):
+        if request.method == 'POST':
+            username = request.POST.get('username')
+            try:
+                user = User.objects.get(username=username)
+                token = default_token_generator.make_token(user)
+                uid = urlsafe_base64_encode(force_bytes(user.pk))
+                return JsonResponse({'token': token, 'uid': uid})
+            except User.DoesNotExist:
+                return JsonResponse({'error': 'User does not exist'}, status=400)
+        return JsonResponse({'error': 'Invalid request method'}, status=400)
+
+class ResetPassword(APIView):
+    permission_classes = [IsAdminUser]
+    def post(self, request, *args, **kwargs):
+        
+        if request.method == 'POST':
+            uidb64 = request.POST.get('uid')
+            token = request.POST.get('token')
+            new_password = generate_random_password()
+            
+            try:
+                uid = force_str(urlsafe_base64_decode(uidb64))
+                user = User.objects.get(pk=uid)
+                
+                if default_token_generator.check_token(user, token):
+                    user.set_password(new_password)
+                    user.save()
+                    return JsonResponse({'success': f'Password has been reset successfully. Password: {new_password}'})
+                else:
+                    return JsonResponse({'error': 'Invalid token'}, status=400)
+            except (User.DoesNotExist, ValueError):
+                return JsonResponse({'error': 'Invalid user or token'}, status=400)
+        return JsonResponse({'error': 'Invalid request method'}, status=400)
+
+""" @csrf_exempt
+def reset_password(request):
+    permission_classes = [IsAdminUser]
+
+    if request.method == 'POST':
+        uidb64 = request.POST.get('uid')
+        token = request.POST.get('token')
+        new_password = generate_random_password()
+        
+        try:
+            uid = force_str(urlsafe_base64_decode(uidb64))
+            user = User.objects.get(pk=uid)
+            
+            if default_token_generator.check_token(user, token):
+                user.set_password(new_password)
+                user.save()
+                return JsonResponse({'success': f'Password has been reset successfully. Password: {new_password}'})
+            else:
+                return JsonResponse({'error': 'Invalid token'}, status=400)
+        except (User.DoesNotExist, ValueError):
+            return JsonResponse({'error': 'Invalid user or token'}, status=400)
+    return JsonResponse({'error': 'Invalid request method'}, status=400) """
 
 class RegisterUserView(APIView):
     permission_classes = [IsAdminUser]
