@@ -66,7 +66,7 @@ class ProfCollegianBodies(models.Model):
 class ProfMember(models.Model):
     id = models.AutoField(primary_key = True)
     prof_id = models.ForeignKey(Prof, on_delete = models.CASCADE)
-    photo = models.ImageField(upload_to=get_upload_path_image)
+    photo = models.ImageField(upload_to=get_upload_path_image, default=None, blank=True, null=True)
     name = models.CharField(max_length = 255)
     union_ticket_number = models.CharField(max_length = 255)
     gender = models.CharField(max_length = 10)

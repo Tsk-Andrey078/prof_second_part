@@ -316,7 +316,7 @@ class UploadProfMembers(APIView):
             sheet = wb.active
 
             for row in sheet.iter_rows(min_row=2, values_only=True):  # Начинаем со второй строки (с пропуском заголовков)
-                photo = row[0]
+                photo = None
                 name = row[1]
                 union_ticket_number = row[2]
                 gender = row[3]
