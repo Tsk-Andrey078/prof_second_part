@@ -2,7 +2,7 @@ from django.contrib import admin
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from rest_framework.authtoken.views import obtain_auth_token
-from .views import ProfView, ProfCollegianBodiesView, VizitView, VacationView, AwardsView, SocialPartnershipView, ProfMemberView, ReportView, AwardsVacationProfIdVIew, CustomAuthToken, RegisterUserView, GenerateResetToken, ResetPassword, GetCollegianByBin, GetReportByBin
+from .views import ProfView, ProfCollegianBodiesView, VizitView, VacationView, AwardsView, SocialPartnershipView, ProfMemberView, ReportView, AwardsVacationProfIdVIew, CustomAuthToken, RegisterUserView, GenerateResetToken, ResetPassword, GetCollegianByBin, GetReportByBin, UploadProfMembers
 
 router = DefaultRouter()
 router.register('prof-view', ProfView, basename = 'prof-view')
@@ -23,6 +23,7 @@ urlpatterns = [
     path('prof/<str:bin>/', ProfView.as_view({'get': 'retrieve'}), name='prof-detail'),
     path('get-collegian-by-bin/', GetCollegianByBin.as_view(), name='get-collegian-by-bin'),
     path('get-report-by-bin/', GetReportByBin.as_view(), name='get-report-by-bin'),
+    path('upload-prof-members/', UploadProfMembers.as_view(), name='upload-prof-members'),
     path('awards-vacation-prof-member-id-view', AwardsVacationProfIdVIew.as_view(), name='awards-vacation-prof-member-id-view'),
     path('', include(router.urls))
 ]
