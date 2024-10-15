@@ -300,7 +300,7 @@ class UploadProfMembers(APIView):
 
         # Проверяем существование объекта Prof
         try:
-            prof = Prof.objects.get(id=prof_id)  # Поиск объекта Prof по его id
+            prof = Prof.objects.get(bin=prof_id)  # Поиск объекта Prof по его id
         except Prof.DoesNotExist:
             return Response({'error': f'Prof with id {prof_id} does not exist'}, status=status.HTTP_400_BAD_REQUEST)
 
